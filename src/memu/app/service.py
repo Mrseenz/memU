@@ -115,6 +115,8 @@ class MemoryService(MemorizeMixin, RetrieveMixin, CRUDMixin):
                 chat_model=cfg.chat_model,
                 provider=cfg.provider,
                 endpoint_overrides=cfg.endpoint_overrides,
+                capability_autodetect=cfg.capability_autodetect,
+                capability_models_endpoint=cfg.capability_models_endpoint,
                 extra_headers=cfg.http_headers,
                 embed_model=cfg.embed_model,
             )

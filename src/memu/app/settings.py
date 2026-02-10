@@ -116,6 +116,14 @@ class LLMConfig(BaseModel):
         default_factory=dict,
         description="Optional overrides for HTTP endpoints (keys: 'chat'/'summary').",
     )
+    capability_autodetect: bool = Field(
+        default=True,
+        description="When using the httpx backend, probe /models to detect chat/vision/embedding support.",
+    )
+    capability_models_endpoint: str = Field(
+        default="/models",
+        description="Provider endpoint used for capability detection.",
+    )
     http_headers: dict[str, str] = Field(
         default_factory=dict,
         description="Optional extra HTTP headers for provider endpoints (used by httpx client backend).",

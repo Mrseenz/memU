@@ -22,6 +22,8 @@ async def main() -> None:
                 "api_key": "",  # no auth for most local setups
                 # Optional: pass local gateway specific headers
                 # "http_headers": {"X-Api-Key": "local-secret"},
+                "capability_autodetect": True,
+                "capability_models_endpoint": "/models",
                 "chat_model": "local-gguf",
                 # Set embed_model only if your local endpoint supports /embeddings
                 "embed_model": "local-gguf",

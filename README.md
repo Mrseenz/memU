@@ -415,6 +415,8 @@ service = MemoryService(
             "base_url": "http://127.0.0.1:8080/v1",  # local OpenAI-compatible endpoint
             "api_key": "",  # optional for local servers
             "http_headers": {"X-Api-Key": "optional-local-header"},  # optional custom headers
+            "capability_autodetect": True,  # query /models and auto-detect chat/vision/embedding support
+            "capability_models_endpoint": "/models",  # override if your server exposes another models endpoint
             "chat_model": "local-gguf",  # replace with your served model id
             "embed_model": "local-gguf",  # optional: if your local endpoint supports embeddings
         },
@@ -424,6 +426,7 @@ service = MemoryService(
 
 If `provider="gguf"` is set, MemU automatically defaults to `http://127.0.0.1:8080/v1` and does not send an auth header when `api_key` is empty.
 If your local gateway needs custom auth/header keys, use `http_headers`.
+When capability auto-detection is enabled, MemU probes `/models` to detect chat/vision/embeddings support and gracefully falls back when vision is unavailable.
 
 See [`examples/example_6_local_gguf.py`](examples/example_6_local_gguf.py) for a full local workflow example.
 
