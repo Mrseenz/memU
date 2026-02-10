@@ -6,7 +6,10 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
-import httpx
+try:
+    import httpx
+except ModuleNotFoundError:  # pragma: no cover - optional dependency in constrained envs
+    httpx = None  # type: ignore[assignment]
 
 from memu.llm.backends.base import LLMBackend
 from memu.llm.backends.doubao import DoubaoLLMBackend
@@ -65,6 +68,12 @@ class _OpenRouterEmbeddingBackend(_EmbeddingBackend):
 
 logger = logging.getLogger(__name__)
 
+
+def _require_httpx() -> None:
+    if httpx is None:
+        msg = "httpx is required for HTTPLLMClient. Install with `pip install httpx`."
+        raise ModuleNotFoundError(msg)
+
 LLM_BACKENDS: dict[str, Callable[[], LLMBackend]] = {
     OpenAILLMBackend.name: OpenAILLMBackend,
     DoubaoLLMBackend.name: DoubaoLLMBackend,
@@ -85,6 +94,7 @@ class HTTPLLMClient:
         chat_model: str,
         provider: str = "openai",
         endpoint_overrides: dict[str, str] | None = None,
+        extra_headers: dict[str, str] | None = None,
         timeout: int = 60,
         embed_model: str | None = None,
     ):
@@ -104,6 +114,7 @@ class HTTPLLMClient:
         )
         self.timeout = timeout
         self.embed_model = embed_model or chat_model
+        self.extra_headers = dict(extra_headers or {})
 
     async def chat(
         self,
@@ -127,6 +138,7 @@ class HTTPLLMClient:
         if max_tokens is not None:
             payload["max_tokens"] = max_tokens
 
+        _require_httpx()
         async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout) as client:
             resp = await client.post(self.summary_endpoint, json=payload, headers=self._headers())
             resp.raise_for_status()
@@ -140,6 +152,7 @@ class HTTPLLMClient:
         payload = self.backend.build_summary_payload(
             text=text, system_prompt=system_prompt, chat_model=self.chat_model, max_tokens=max_tokens
         )
+        _require_httpx()
         async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout) as client:
             resp = await client.post(self.summary_endpoint, json=payload, headers=self._headers())
             resp.raise_for_status()
@@ -190,6 +203,7 @@ class HTTPLLMClient:
             max_tokens=max_tokens,
         )
 
+        _require_httpx()
         async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout) as client:
             resp = await client.post(self.summary_endpoint, json=payload, headers=self._headers())
             resp.raise_for_status()
@@ -200,6 +214,7 @@ class HTTPLLMClient:
     async def embed(self, inputs: list[str]) -> tuple[list[list[float]], dict[str, Any]]:
         """Create text embeddings using the provider-specific embedding API."""
         payload = self.embedding_backend.build_embedding_payload(inputs=inputs, embed_model=self.embed_model)
+        _require_httpx()
         async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout) as client:
             resp = await client.post(self.embedding_endpoint, json=payload, headers=self._headers())
             resp.raise_for_status()
@@ -241,6 +256,7 @@ class HTTPLLMClient:
                 if language:
                     data["language"] = language
 
+                _require_httpx()
                 async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout * 3) as client:
                     resp = await client.post(
                         "/v1/audio/transcriptions",
@@ -264,9 +280,10 @@ class HTTPLLMClient:
             return result or "", raw_response
 
     def _headers(self) -> dict[str, str]:
-        if not self.api_key.strip():
-            return {}
-        return {"Authorization": f"Bearer {self.api_key}"}
+        headers = dict(self.extra_headers)
+        if self.api_key.strip():
+            headers.setdefault("Authorization", f"Bearer {self.api_key}")
+        return headers
 
     def _load_backend(self, provider: str) -> LLMBackend:
         factory = LLM_BACKENDS.get(provider)

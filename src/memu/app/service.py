@@ -115,6 +115,7 @@ class MemoryService(MemorizeMixin, RetrieveMixin, CRUDMixin):
                 chat_model=cfg.chat_model,
                 provider=cfg.provider,
                 endpoint_overrides=cfg.endpoint_overrides,
+                extra_headers=cfg.http_headers,
                 embed_model=cfg.embed_model,
             )
         elif backend == "lazyllm_backend":

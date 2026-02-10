@@ -116,6 +116,10 @@ class LLMConfig(BaseModel):
         default_factory=dict,
         description="Optional overrides for HTTP endpoints (keys: 'chat'/'summary').",
     )
+    http_headers: dict[str, str] = Field(
+        default_factory=dict,
+        description="Optional extra HTTP headers for provider endpoints (used by httpx client backend).",
+    )
     embed_model: str = Field(
         default="text-embedding-3-small",
         description="Default embedding model used for vectorization.",

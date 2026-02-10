@@ -414,6 +414,7 @@ service = MemoryService(
             "client_backend": "httpx",
             "base_url": "http://127.0.0.1:8080/v1",  # local OpenAI-compatible endpoint
             "api_key": "",  # optional for local servers
+            "http_headers": {"X-Api-Key": "optional-local-header"},  # optional custom headers
             "chat_model": "local-gguf",  # replace with your served model id
             "embed_model": "local-gguf",  # optional: if your local endpoint supports embeddings
         },
@@ -422,6 +423,9 @@ service = MemoryService(
 ```
 
 If `provider="gguf"` is set, MemU automatically defaults to `http://127.0.0.1:8080/v1` and does not send an auth header when `api_key` is empty.
+If your local gateway needs custom auth/header keys, use `http_headers`.
+
+See [`examples/example_6_local_gguf.py`](examples/example_6_local_gguf.py) for a full local workflow example.
 
 ---
 
