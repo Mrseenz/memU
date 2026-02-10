@@ -4,13 +4,22 @@ import logging
 from collections.abc import Callable
 from typing import Literal
 
-import httpx
+try:
+    import httpx
+except ModuleNotFoundError:  # pragma: no cover - optional dependency in constrained envs
+    httpx = None  # type: ignore[assignment]
 
 from memu.embedding.backends.base import EmbeddingBackend
 from memu.embedding.backends.doubao import DoubaoEmbeddingBackend, DoubaoMultimodalEmbeddingInput
 from memu.embedding.backends.openai import OpenAIEmbeddingBackend
 
 logger = logging.getLogger(__name__)
+
+
+def _require_httpx() -> None:
+    if httpx is None:
+        msg = "httpx is required for HTTPEmbeddingClient. Install with `pip install httpx`."
+        raise ModuleNotFoundError(msg)
 
 EMBEDDING_BACKENDS: dict[str, Callable[[], EmbeddingBackend]] = {
     OpenAIEmbeddingBackend.name: OpenAIEmbeddingBackend,
@@ -56,6 +65,7 @@ class HTTPEmbeddingClient:
             List of embedding vectors
         """
         payload = self.backend.build_embedding_payload(inputs=inputs, embed_model=self.embed_model)
+        _require_httpx()
         async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout) as client:
             resp = await client.post(self.embedding_endpoint, json=payload, headers=self._headers())
             resp.raise_for_status()
@@ -118,6 +128,7 @@ class HTTPEmbeddingClient:
         )
 
         endpoint = self.backend.multimodal_embedding_endpoint
+        _require_httpx()
         async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout) as client:
             resp = await client.post(endpoint, json=payload, headers=self._headers())
             resp.raise_for_status()
@@ -127,6 +138,8 @@ class HTTPEmbeddingClient:
         return self.backend.parse_multimodal_embedding_response(data)
 
     def _headers(self) -> dict[str, str]:
+        if not self.api_key.strip():
+            return {}
         return {"Authorization": f"Bearer {self.api_key}"}
 
     def _load_backend(self, provider: str) -> EmbeddingBackend:
