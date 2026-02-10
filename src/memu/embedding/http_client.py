@@ -127,6 +127,8 @@ class HTTPEmbeddingClient:
         return self.backend.parse_multimodal_embedding_response(data)
 
     def _headers(self) -> dict[str, str]:
+        if not self.api_key.strip():
+            return {}
         return {"Authorization": f"Bearer {self.api_key}"}
 
     def _load_backend(self, provider: str) -> EmbeddingBackend:

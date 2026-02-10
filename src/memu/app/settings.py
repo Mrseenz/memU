@@ -135,6 +135,13 @@ class LLMConfig(BaseModel):
                 self.api_key = "XAI_API_KEY"
             if self.chat_model == "gpt-4o-mini":
                 self.chat_model = "grok-2-latest"
+        if self.provider == "gguf":
+            if self.base_url == "https://api.openai.com/v1":
+                self.base_url = "http://127.0.0.1:8080/v1"
+            if self.api_key == "OPENAI_API_KEY":
+                self.api_key = ""
+            if self.chat_model == "gpt-4o-mini":
+                self.chat_model = "local-gguf"
         return self
 
 

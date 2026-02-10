@@ -400,6 +400,31 @@ See [`examples/example_4_openrouter_memory.py`](examples/example_4_openrouter_me
 
 ---
 
+### Local GGUF Models (llama.cpp / OpenAI-compatible)
+
+MemU can use locally hosted GGUF models exposed through an OpenAI-compatible server (for example, `llama.cpp --server`).
+
+```python
+from memu import MemoryService
+
+service = MemoryService(
+    llm_profiles={
+        "default": {
+            "provider": "gguf",
+            "client_backend": "httpx",
+            "base_url": "http://127.0.0.1:8080/v1",  # local OpenAI-compatible endpoint
+            "api_key": "",  # optional for local servers
+            "chat_model": "local-gguf",  # replace with your served model id
+            "embed_model": "local-gguf",  # optional: if your local endpoint supports embeddings
+        },
+    },
+)
+```
+
+If `provider="gguf"` is set, MemU automatically defaults to `http://127.0.0.1:8080/v1` and does not send an auth header when `api_key` is empty.
+
+---
+
 ## 📖 Core APIs
 
 ### `memorize()` - Continuous Learning Pipeline
